@@ -24,15 +24,18 @@ const examplesDir = path.join(__dirname, 'examples');
 const htmlTemplatePath = path.join(__dirname, 'examples', 'template.ejs');
 
 module.exports = {
-  mode: 'development',
+  // mode: 'development',
+  mode: 'production',
   entry: {
-    rdf: path.join(examplesDir, 'rdf.ts'),
-    demo: path.join(examplesDir, 'demo.ts'),
-    dbpedia: path.join(examplesDir, 'dbpedia.ts'),
-    wikidata: path.join(examplesDir, 'wikidata.ts'),
-    composite: path.join(examplesDir, 'composite.ts'),
-    wikidataGraph: path.join(examplesDir, 'wikidataGraph.ts'),
-    toolbarCustomization: path.join(examplesDir, 'toolbarCustomization.tsx'),
+    'coypu-internal': path.join(examplesDir, 'coypu-internal.ts'),
+    freebase: path.join(examplesDir, 'freebase.ts'),
+    // rdf: path.join(examplesDir, 'rdf.ts'),
+    // demo: path.join(examplesDir, 'demo.ts'),
+    // dbpedia: path.join(examplesDir, 'dbpedia.ts'),
+    // wikidata: path.join(examplesDir, 'wikidata.ts'),
+    // composite: path.join(examplesDir, 'composite.ts'),
+    // wikidataGraph: path.join(examplesDir, 'wikidataGraph.ts'),
+    // toolbarCustomization: path.join(examplesDir, 'toolbarCustomization.tsx'),
   },
   resolve: {
     alias: aliases,
@@ -82,6 +85,18 @@ module.exports = {
       template: htmlTemplatePath,
     }),
     new HtmlWebpackPlugin({
+      filename: 'coypu-internal.html',
+      title: 'CoyPu-Internal Graph Explorer',
+      chunks: ['commons', 'coypu-internal'],
+      template: htmlTemplatePath,
+    }),
+    new HtmlWebpackPlugin({
+      filename: 'freebase.html',
+      title: 'Freebase Graph Explorer',
+      chunks: ['commons', 'freebase'],
+      template: htmlTemplatePath,
+    }),
+    new HtmlWebpackPlugin({
       filename: 'dbpedia.html',
       title: 'Graph Explorer DBPedia SparQL Demo',
       chunks: ['commons', 'dbpedia'],
@@ -112,31 +127,31 @@ module.exports = {
       template: htmlTemplatePath,
     }),
   ],
-  devServer: {
-    proxy: {
-      '/sparql**': {
-        target: SPARQL_ENDPOINT,
-        pathRewrite: { '/sparql': '' },
-        changeOrigin: true,
-        secure: false,
-      },
-      '/wikidata**': {
-        target: WIKIDATA_ENDPOINT || SPARQL_ENDPOINT,
-        pathRewrite: { '/wikidata': '' },
-        changeOrigin: true,
-        secure: false,
-      },
-      '/lod-proxy/**': {
-        target: LOD_PROXY,
-        changeOrigin: true,
-        secure: false,
-      },
-      '/wikidata-prop-suggest**': {
-        target: PROP_SUGGEST,
-        pathRewrite: { '/wikidata-prop-suggest': '' },
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
+  // devServer: {
+  //   proxy: {
+  //     '/sparql**': {
+  //       target: SPARQL_ENDPOINT,
+  //       pathRewrite: { '/sparql': '' },
+  //       changeOrigin: true,
+  //       secure: false,
+  //     },
+  //     '/wikidata**': {
+  //       target: WIKIDATA_ENDPOINT || SPARQL_ENDPOINT,
+  //       pathRewrite: { '/wikidata': '' },
+  //       changeOrigin: true,
+  //       secure: false,
+  //     },
+  //     '/lod-proxy/**': {
+  //       target: LOD_PROXY,
+  //       changeOrigin: true,
+  //       secure: false,
+  //     },
+  //     '/wikidata-prop-suggest**': {
+  //       target: PROP_SUGGEST,
+  //       pathRewrite: { '/wikidata-prop-suggest': '' },
+  //       changeOrigin: true,
+  //       secure: false,
+  //     },
+  //   },
+  // },
 };

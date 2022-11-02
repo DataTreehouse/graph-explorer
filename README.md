@@ -1,3 +1,31 @@
+# Ontodia Coypu version
+
+# Note
+
+the correct Node version is
+
+`node --version`
+
+```
+v16.10.0
+```
+
+## Installation
+
+`npm install graph-explorer`
+
+# Building the ontodia graph explorer for coypu
+
+```
+BUNDLE_PEERS=true ./node_modules/.bin/webpack --config webpack.demo.config.js
+```
+
+the files are output to
+
+`dist/examples`
+
+folder.
+
 # Graph Explorer
 [![npm version](https://badge.fury.io/js/graph-explorer.svg)](https://www.npmjs.com/package/graph-explorer)
 ![CI status](https://github.com/zazuko/graph-explorer/workflows/Node.js%20CI/badge.svg)
