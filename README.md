@@ -1,5 +1,7 @@
 # Ontodia Coypu version
 
+Serves ontodia beneath https://explore.skynet.coypu.org
+
 # Note
 
 the correct Node version is
