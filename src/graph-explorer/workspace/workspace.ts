@@ -152,6 +152,7 @@ export class Workspace extends Component<WorkspaceProps, WorkspaceState> {
     rightPanelInitiallyOpen: false,
     languages: [
       { code: 'en', label: 'English' },
+      { code: 'de', label: 'German' },
       { code: 'ru', label: 'Russian' },
     ],
     language: 'en',
