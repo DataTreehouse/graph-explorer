@@ -5,10 +5,9 @@ import {
   Workspace,
   WorkspaceProps,
   SparqlDataProvider,
-  WikidataSettings,
   SparqlQueryMethod,
-  PropertySuggestionParams,
-  PropertyScore,
+  WikidataSettings,
+  SparqlDataProviderSettings,
 } from '../src/graph-explorer/index';
 
 import {
@@ -17,115 +16,129 @@ import {
   saveLayoutToLocalStorage,
 } from './common';
 
-const WIKIDATA_PREFIX = 'http://www.wikidata.org/prop/direct/';
+const FWikidataSettings: SparqlDataProviderSettings = {
+  ...WikidataSettings,
+  ...{
+     fullTextSearch: {
+       prefix: 'PREFIX text: <http://jena.apache.org/text#>\n',
+       queryPattern: `
+                 (?inst ?score) text:query (rdfs:label "\${text}").
+           `,
+     },
+     linkTypesQuery: `SELECT DISTINCT ?link ?instcount ?label WHERE {
+       service <cache:> {
+         \${linkTypesPattern}
+         OPTIONAL {
+           ?link rdfs:label ?label .
+           filter(lang(?label)="en").
+         }.
+       }
+     }`,
+     linkTypesInfoQuery: `SELECT ?link ?label WHERE {
+       VALUES(?link) {\${ids}}
+       OPTIONAL { ?link \${schemaLabelProperty} ?label . filter(lang(?label)="en") }
+       optional { ?link ^<http://wikiba.se/ontology#directClaim>/\${schemaLabelProperty} ?label . filter(lang(?label)="en") }
+     }`,
+     propertyInfoQuery: `SELECT ?property ?label WHERE {
+       VALUES(?property) {\${ids}}
+       OPTIONAL { ?property \${schemaLabelProperty} ?label . filter(lang(?label)="en") }
+       optional { ?property ^<http://wikiba.se/ontology#directClaim>/\${schemaLabelProperty} ?label . filter(lang(?label)="en") }
+     }`,
+     filterTypePattern: `?inst wdt:P31/wdt:P279* ?class`,
+     filterAdditionalRestriction: `FILTER ISIRI(?inst) `,
+     filterElementInfoPattern: `OPTIONAL {?inst wdt:P31 ?foundClass}
+       BIND (coalesce(?foundClass, owl:Thing) as ?class)
+       OPTIONAL {
+         service <loop:> {
+           select ?inst ?label {
+             {
+               ?inst rdfs:label ?label
+               filter(lang(?label)="en")
+             } union {
+               ?inst rdfs:label ?label
+             }
+           } limit 1
+         }
+       }
+     `,
+           // select distinct ?class ?parent {
+           //   {
+           //     ?class wdt:P279 wd:Q35120.
+           //   } UNION {
+           //     ?parent wdt:P279 wd:Q35120.
+           //     ?class wdt:P279 ?parent.
+           //   } UNION {
+           //     ?parent wdt:P279/wdt:P279 wd:Q35120.
+           //     ?class wdt:P279 ?parent.
+           //   }             
+           // }
+     classTreeQuery: `
+       SELECT distinct ?class ?label ?parent WHERE {
+         {
+           service <cache:> {
+             ?parent wdt:P279* wd:Q35120.
+             ?class wdt:P279 ?parent.
+           }
+         }
+         service <loop:> {
+           optional {
+             select ?class ?label {
+               {
+                 ?class rdfs:label ?label.
+                 filter(lang(?label)="en")
+               } union {
+                 ?class rdfs:label ?label.
+               }
+             } limit 1
+           }
+         }
+       }`,
+     imageQueryPattern: `service <loop:> {
+         {
+           ?inst ?linkType ?fullImage
+         } union {
+           ?inst wdt:P163/wdt:P18 ?fullImage
+         }
+       }
+       BIND(CONCAT("https://commons.wikimedia.org/w/thumb.php?f=",
+                   STRAFTER(STR(?fullImage), "Special:FilePath/"), "&w=200") AS ?image)`,
+  },
+};
 
-let workspace: Workspace;
-
-function getElementLabel(id: string): string {
-  const model = workspace.getModel();
-  const view = workspace.getDiagram();
-  const element = model.getElement(id);
-  return element
-    ? view.formatLabel(element.data.label.values, element.iri)
-    : '';
-}
-
-function wikidataSuggestProperties(params: PropertySuggestionParams) {
-  const idMap: { [id: string]: string } = {};
-
-  const properties = params.properties.map((id) => {
-    let resultID;
-    if (id.startsWith(WIKIDATA_PREFIX)) {
-      resultID = id.substr(WIKIDATA_PREFIX.length, id.length);
-    } else {
-      resultID = id;
-    }
-    idMap[resultID] = id;
-    return resultID;
-  });
-  const term = params.token.toLowerCase() || getElementLabel(params.elementId);
-  const requestBody = {
-    threshold: 0.1,
-    term,
-    // eslint-disable-next-line @typescript-eslint/camelcase
-    instance_properties: properties,
-  };
-  return fetch('/wikidata-prop-suggest', {
-    method: 'POST',
-    body: JSON.stringify(requestBody),
-    credentials: 'same-origin',
-    mode: 'cors',
-    cache: 'default',
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        const error = new Error(response.statusText);
-        (error as any).response = response;
-        throw error;
-      }
-    })
-    .then((json) => {
-      const dictionary: { [id: string]: PropertyScore } = {};
-      for (const scoredItem of json.data) {
-        const propertyIri = idMap[scoredItem.id];
-        const item = dictionary[propertyIri];
-
-        if (item && item.score > scoredItem.value) {
-          continue;
-        }
-
-        dictionary[propertyIri] = { propertyIri, score: scoredItem.value };
-      }
-
-      Object.keys(idMap).forEach((key) => {
-        const propertyIri = idMap[key];
-
-        if (dictionary[propertyIri]) {
-          return;
-        }
-
-        dictionary[propertyIri] = { propertyIri, score: 0 };
-      });
-
-      return dictionary;
-    });
-}
-
-function onWorkspaceMounted(wspace: Workspace) {
-  if (!wspace) {
+function onWorkspaceMounted(workspace: Workspace) {
+  if (!workspace) {
     return;
   }
 
-  workspace = wspace;
-
   const diagram = tryLoadLayoutFromLocalStorage();
-  const dataProvider = new SparqlDataProvider(
-    {
-      endpointUrl: 'https://query.wikidata.org/bigdata/namespace/wdq/sparql',
-      imagePropertyUris: [
-        'http://www.wikidata.org/prop/direct/P18',
-        'http://www.wikidata.org/prop/direct/P154',
-      ],
-    },
-    WikidataSettings
-  );
-
-  workspace
-    .getModel()
-    .importLayout({ diagram, dataProvider, validateLinks: true });
+  workspace.getModel().importLayout({
+    diagram,
+    validateLinks: true,
+    dataProvider: new SparqlDataProvider(
+      {
+        endpointUrl: 'https://skynet.coypu.org/wikidata/',
+        imagePropertyUris: [
+         'http://www.wikidata.org/prop/direct/P18',
+         'http://www.wikidata.org/prop/direct/P154',
+        ],
+        queryMethod: SparqlQueryMethod.POST,
+      },
+      {...FWikidataSettings,
+      ...{
+        }
+      }
+    ),
+  });
 }
 
 const props: WorkspaceProps & ClassAttributes<Workspace> = {
   ref: onWorkspaceMounted,
-  onSaveDiagram: (self) => {
-    const diagram = self.getModel().exportLayout();
+  onSaveDiagram: (workspace) => {
+    const diagram = workspace.getModel().exportLayout();
     window.location.hash = saveLayoutToLocalStorage(diagram);
     window.location.reload();
   },
   viewOptions: {
-    suggestProperties: wikidataSuggestProperties,
     onIriClick: ({ iri }) => window.open(iri),
   },
 };

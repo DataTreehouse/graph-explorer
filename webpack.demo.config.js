@@ -32,7 +32,7 @@ module.exports = {
     // rdf: path.join(examplesDir, 'rdf.ts'),
     // demo: path.join(examplesDir, 'demo.ts'),
     // dbpedia: path.join(examplesDir, 'dbpedia.ts'),
-    // wikidata: path.join(examplesDir, 'wikidata.ts'),
+    wikidata: path.join(examplesDir, 'wikidata.ts'),
     // composite: path.join(examplesDir, 'composite.ts'),
     // wikidataGraph: path.join(examplesDir, 'wikidataGraph.ts'),
     // toolbarCustomization: path.join(examplesDir, 'toolbarCustomization.tsx'),
