@@ -36,7 +36,8 @@ const CoyPuSettings: SparqlDataProviderSettings = {
          ?class a owl:Class.
          OPTIONAL {?class rdfs:label ?label}.
          OPTIONAL { ?class rdfs:subClassOf ?parent_. filter(!isblank(?parent_)). }.
-         BIND(coalesce(?parent_, owl:Thing) as ?parent).
+	 MINUS { ?class rdfs:subClassOf* <https://schema.coypu.org/world-port-index#EnumerationClass> }
+         BIND(coalesce(?parent_, if(strstarts(str(?class),"https://schema.coypu.org/metadata"), <https://schema.coypu.org/metadata-template#MetaThing>, owl:Thing)) as ?parent).
        }`
   },
 };
