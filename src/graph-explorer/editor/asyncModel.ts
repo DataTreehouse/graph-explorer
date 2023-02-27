@@ -208,7 +208,8 @@ export class AsyncModel extends DiagramModel {
         visible,
         showLabel,
       };
-      const linkType = this.getLinkType(linkTypeId);
+      //const linkType = this.getLinkType(linkTypeId);
+      const linkType = this.createLinkType(linkTypeId);
       if (linkType) {
         linkType.setVisibility({ visible, showLabel });
       }

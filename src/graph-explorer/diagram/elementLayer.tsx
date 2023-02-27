@@ -3,7 +3,7 @@ import * as React from 'react';
 import { findDOMNode } from 'react-dom';
 import { hcl } from 'd3-color';
 
-import { Property, ElementTypeIri, PropertyTypeIri } from '../data/model';
+import { Property, ElementTypeIri, PropertyTypeIri, LinkTypeIri } from '../data/model';
 import { TemplateProps } from '../customization/props';
 import { Debouncer } from '../viewUtils/async';
 import { EventObserver } from '../viewUtils/events';
@@ -156,6 +156,14 @@ export class ElementLayer extends React.Component<Props, State> {
       const invalidatesRender = data.changePosition || data.requestedRedraw;
       if (invalidatesRender) {
         this.requestRedraw(invalidatesRender.source, RedrawFlags.Render);
+      }
+    });
+    this.listener.listen(view.model.events, 'linkTypeEvent', ({ data }) => {
+      const invalidatesTemplate = data.changeVisibility;
+      if (invalidatesTemplate) {
+        this.requestRedrawAll(
+          RedrawFlags.RecomputeTemplate
+        );
       }
     });
     this.listener.listen(view.events, 'syncUpdate', ({ layer }) => {
@@ -521,15 +529,20 @@ function computePropertyTable(
   }
 
   const propertyIris = Object.keys(model.data.properties) as PropertyTypeIri[];
-  const propTable = propertyIris.map((key) => {
-    const property = view.model.createProperty(key);
-    const name = view.formatLabel(property.label, key);
-    return {
-      id: key,
-      name: name,
-      property: model.data.properties[key],
-    };
-  });
+  const propTable = propertyIris
+    .filter((key) => {
+      const fat = view.model.getLinkType(key as unknown as LinkTypeIri);
+      return !fat || fat.visible;
+    })
+    .map((key) => {
+      const property = view.model.createProperty(key);
+      const name = view.formatLabel(property.label, key);
+      return {
+	id: key,
+	name: name,
+	property: model.data.properties[key],
+      };
+    });
 
   propTable.sort((a, b) => {
     const aLabel = (a.name || a.id).toLowerCase();
