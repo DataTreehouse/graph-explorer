@@ -311,6 +311,7 @@ class OverlayedElement extends React.Component<OverlayedElementProps, {}> {
 
   private typesObserver: KeyedObserver<ElementTypeIri>;
   private propertiesObserver: KeyedObserver<PropertyTypeIri>;
+  private resizeObserver: ResizeObserver;
 
   getChildContext(): ElementContextWrapper {
     const graphExplorerElement: ElementContext = {
@@ -422,9 +423,15 @@ class OverlayedElement extends React.Component<OverlayedElementProps, {}> {
       this.rerenderTemplate
     );
     this.observeTypes();
+    this.resizeObserver = new ResizeObserver(() => {
+      const { state, onResize } = this.props;
+      onResize(state.element, findDOMNode(this) as HTMLDivElement);
+    });
+    this.resizeObserver.observe(findDOMNode(this) as HTMLDivElement);
   }
 
   componentWillUnmount() {
+    this.resizeObserver.disconnect();
     this.listener.stopListening();
     this.typesObserver.stopListening();
     this.propertiesObserver.stopListening();

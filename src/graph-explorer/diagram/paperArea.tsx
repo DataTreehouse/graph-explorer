@@ -524,6 +524,21 @@ export class PaperArea extends React.Component<PaperAreaProps, State> {
       return;
     }
 
+    if (e.target instanceof HTMLElement &&
+      Array.from((e.target.classList as any).values())
+	.filter(e => (e as string).endsWith('__properties'))
+	.length) {
+      const bounds = e.target.getBoundingClientRect();
+      const x = e.pageX - (bounds.left + window.pageXOffset);
+      const y = e.pageY - (bounds.top + window.pageYOffset);
+      const xDiff = Math.abs(x - bounds.width);
+      const yDiff = Math.abs(y - bounds.height);
+      if (xDiff < 20 && yDiff < 20) {
+	// trying to resize
+	return;
+      }
+    }
+
     const restore = RestoreGeometry.capture(this.props.view.model);
     const batch = this.props.view.model.history.startBatch(restore.title);
 

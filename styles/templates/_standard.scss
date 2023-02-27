@@ -3,6 +3,10 @@
   max-width: 400px;
   float: left;
 
+  &:has(&__properties[style*="width"]) {
+    max-width: unset;
+  }
+
   &__main {
     border-radius: 2px;
     border: 1px solid;
@@ -114,8 +118,13 @@
   &__properties {
     font-size: 15px;
     max-height: 200px;
-    overflow-y: scroll;
-    overflow-x: hidden;
+    min-height: 2em;
+    overflow: auto;
+    resize: both;
+  }
+
+  &__properties[style*="height"] {
+    max-height: unset;
   }
 
   &__propertites-row {
