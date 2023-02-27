@@ -37,13 +37,28 @@ PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
        PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
        PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
      
        SELECT distinct ?class ?label ?parent WHERE {
-         ?class a owl:Class.
-         OPTIONAL {?class rdfs:label ?label}.
-         OPTIONAL { ?class rdfs:subClassOf ?parent_. filter(!isblank(?parent_)). }.
-	 MINUS { ?class rdfs:subClassOf* <https://schema.coypu.org/world-port-index#EnumerationClass> }
-         BIND(coalesce(?parent_, if(strstarts(str(?class),"https://schema.coypu.org/metadata"), <https://schema.coypu.org/metadata-template#MetaThing>, owl:Thing)) as ?parent).
+         {
+           ?class a owl:Class .
+           OPTIONAL { ?class rdfs:label ?label } .
+           OPTIONAL { ?class rdfs:subClassOf ?parent_ . filter(!isblank(?parent_)) . } .
+	   MINUS { ?class rdfs:subClassOf* <https://schema.coypu.org/world-port-index#EnumerationClass> }
+           BIND(coalesce(?parent_, if(strstarts(str(?class),"https://schema.coypu.org/metadata"), <https://schema.coypu.org/metadata-template#MetaThing>, owl:Thing)) AS ?parent) .
+	 } UNION {
+	   ?class a skos:Concept ;
+	          skos:inScheme ?scheme .
+           OPTIONAL { ?class skos:prefLabel ?label } .
+           OPTIONAL { ?class skos:broader ?parent_ . filter(!isblank(?parent_)) . } .
+	   BIND(coalesce(?parent_, ?scheme) AS ?parent) .
+	 } UNION {
+	   { SELECT ?class SAMPLE(?label) {
+	       [] skos:inScheme ?class .
+	       OPTIONAL { ?class skos:prefLabel|rdfs:label ?label }
+	     } GROUP BY ?class } .
+	   BIND(skos:ConceptScheme AS ?parent) .
+	 }
        }`
   },
 };
