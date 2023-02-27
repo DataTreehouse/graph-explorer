@@ -11,6 +11,7 @@ import {
 
 import { MetadataApi } from '../data/metadataApi';
 import { ValidationApi } from '../data/validationApi';
+import { ElementIri } from '../data/model';
 
 import { Rect } from '../diagram/geometry';
 import { RestoreGeometry } from '../diagram/commands';
@@ -163,6 +164,7 @@ export class Workspace extends Component<WorkspaceProps, WorkspaceState> {
   private readonly model: AsyncModel;
   private readonly view: DiagramView;
   private readonly editor: EditorController;
+  private lastMousePosition = { x: 75, y: 40 };
 
   private markup: WorkspaceMarkup;
 
@@ -296,6 +298,10 @@ export class Workspace extends Component<WorkspaceProps, WorkspaceState> {
     });
 
     this.listener.listen(this.markup.paperArea.events, 'pointerUp', (e) => {
+      this.lastMousePosition = this.markup.paperArea.pageToPaperCoords(
+	e.sourceEvent.pageX,
+	e.sourceEvent.pageY
+      );
       if (this.props.onPointerUp) {
         this.props.onPointerUp(e);
       }
@@ -306,6 +312,10 @@ export class Workspace extends Component<WorkspaceProps, WorkspaceState> {
       }
     });
     this.listener.listen(this.markup.paperArea.events, 'pointerDown', (e) => {
+      this.lastMousePosition = this.markup.paperArea.pageToPaperCoords(
+	e.sourceEvent.pageX,
+	e.sourceEvent.pageY
+      );
       if (this.props.onPointerDown) {
         this.props.onPointerDown(e);
       }
@@ -322,6 +332,7 @@ export class Workspace extends Component<WorkspaceProps, WorkspaceState> {
         onWorkspaceEvent(WorkspaceEventKey.editorAddElements)
       );
     }
+    document.body.addEventListener('paste', this.onBodyPaste);
   }
 
   componentDidUpdate(nextProps: WorkspaceProps) {
@@ -340,9 +351,20 @@ export class Workspace extends Component<WorkspaceProps, WorkspaceState> {
   }
 
   componentWillUnmount() {
+    document.body.removeEventListener('paste', this.onBodyPaste);
     this.listener.stopListening();
     this.view.dispose();
   }
+
+  private onBodyPaste = (e: ClipboardEvent) => {
+    if (e.target === document.body) {
+      //e.preventDefault();
+      const paste = (e.clipboardData || (window as any).clipboardData).getData("text");
+      const editor = this.editor;
+      editor.onDragDrop([paste as ElementIri], this.lastMousePosition);
+      //this.props.view.model.createElement(paste);
+    }
+  };
 
   private updateNavigator(showNavigator: boolean) {
     if (showNavigator) {
