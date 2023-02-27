@@ -1,5 +1,8 @@
 import * as React from 'react';
 import { Component } from 'react';
+import * as wellknown from 'wellknown';
+import { Map, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
+import * as Leaflet from 'leaflet';
 
 import { isEncodedBlank } from '../../data/sparql/blankNodes';
 
@@ -124,6 +127,23 @@ export class StandardTemplate extends Component<TemplateProps, {}> {
       <div className={`${CLASS_NAME}__properties`}>
         {propsAsList.map(({ name, id, property }) => {
           const propertyValues = getPropertyValues(property);
+	  if (id === 'http://www.opengis.net/ont/geosparql#asWKT') {
+	    const geojson = wellknown.parse(propertyValues[0]);
+	    if (geojson) {
+	      const geojsonFeature = Leaflet.geoJson(geojson);
+
+	      return (
+		<Map key={id} bounds={geojsonFeature.getBounds()} boundsOptions={ { maxZoom: 11 } } zoomControl={false}>
+		  <TileLayer
+		attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
+		url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+		  />
+		  <GeoJSON data={geojson} />
+		  <ZoomControl position="topright" />
+		  </Map>
+	      );
+	    }
+	  }
           return (
             <div key={id} className={`${CLASS_NAME}__properties-row`}>
               <div
