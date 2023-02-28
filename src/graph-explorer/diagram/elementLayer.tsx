@@ -159,7 +159,7 @@ export class ElementLayer extends React.Component<Props, State> {
       }
     });
     this.listener.listen(view.model.events, 'linkTypeEvent', ({ data }) => {
-      const invalidatesTemplate = data.changeVisibility;
+      const invalidatesTemplate = data.changeVisibility || data.changeIsNew;
       if (invalidatesTemplate) {
         this.requestRedrawAll(
           RedrawFlags.RecomputeTemplate

@@ -11,8 +11,13 @@ import {
 } from '../src/graph-explorer/index';
 
 import {
+  ElementIri
+} from '../src/graph-explorer/data/model';
+
+import {
   onPageLoad,
   tryLoadLayoutFromLocalStorage,
+  tryLoadFromNamedResources,
   saveLayoutToLocalStorage,
 } from './common';
 
@@ -84,25 +89,40 @@ function onWorkspaceMounted(workspace: Workspace) {
     return;
   }
 
-  const diagram = tryLoadLayoutFromLocalStorage();
-  workspace.getModel().importLayout({
-    diagram,
-    validateLinks: true,
-    dataProvider: new SparqlDataProvider(
-      {
-        endpointUrl: 'https://skynet.coypu.org/coypu-internal/',
-	queryFunction: queryInternalCoypu,
-        imagePropertyUris: [
-          'http://xmlns.com/foaf/0.1/depiction',
-          'http://xmlns.com/foaf/0.1/img',
-        ],
-        queryMethod: SparqlQueryMethod.POST,
-      },
-      {...CoyPuSettings,
-      ...{
-        }
-      }
-    ),
+  const dataProvider = new SparqlDataProvider(
+    {
+      endpointUrl: 'https://skynet.coypu.org/coypu-internal/',
+      queryFunction: queryInternalCoypu,
+      imagePropertyUris: [
+        'http://xmlns.com/foaf/0.1/depiction',
+        'http://xmlns.com/foaf/0.1/img',
+      ],
+      queryMethod: SparqlQueryMethod.POST,
+    },
+    {...CoyPuSettings,
+     ...{
+     }
+    }
+  );
+
+  const localDiagram = tryLoadLayoutFromLocalStorage();
+  let next;
+  if (!localDiagram && window.location.hash.length > 2 && window.location.hash.slice(0, 2) === '#!') {
+    const remote = window.location.hash.slice(2);
+    next = fetch('https://diagramstore.aksw.org/' + remote)
+      .then((res) => res.json());
+  } else {
+    next = Promise.resolve(localDiagram);
+  }
+  next.then((diagram) => {
+    workspace.getModel().importLayout({
+      diagram,
+      validateLinks: true,
+      dataProvider
+    });
+    if (!diagram) {
+      tryLoadFromNamedResources(workspace);
+    }
   });
 }
 
@@ -111,7 +131,18 @@ const props: WorkspaceProps & ClassAttributes<Workspace> = {
   onSaveDiagram: (workspace) => {
     const diagram = workspace.getModel().exportLayout();
     window.location.hash = saveLayoutToLocalStorage(diagram);
-    window.location.reload();
+    fetch(
+      'https://diagramstore.aksw.org', {
+	method: 'POST',
+	body: JSON.stringify(diagram)
+      })
+      .then((res) => res.json())
+      .then((json) => {
+	window.location.hash = '!' + json.data.frag;
+      })
+      .finally(() => {
+	window.location.reload();
+      });
   },
   viewOptions: {
     onIriClick: ({ iri }) => window.open(iri),
