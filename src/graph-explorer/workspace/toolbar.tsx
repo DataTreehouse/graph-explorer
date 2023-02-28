@@ -144,6 +144,7 @@ export class DefaultToolbar extends React.Component<ToolbarProps, {}> {
           >
             <span className="fa fa-arrows-alt" aria-hidden="true" />
           </button>
+	{/*
           <button
             type="button"
             className="graph-explorer-btn graph-explorer-btn-default"
@@ -165,6 +166,15 @@ export class DefaultToolbar extends React.Component<ToolbarProps, {}> {
             className="graph-explorer-btn graph-explorer-btn-default"
             title="Print diagram"
             onClick={this.props.onPrint}
+          >
+            <span className="fa fa-print" aria-hidden="true" />
+          </button>
+	 */}
+          <button
+            type="button"
+            className="graph-explorer-btn graph-explorer-btn-default"
+            title="Print diagram"
+            onClick={window.print}
           >
             <span className="fa fa-print" aria-hidden="true" />
           </button>

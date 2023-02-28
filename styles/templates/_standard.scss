@@ -196,3 +196,26 @@
 .leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out {
   font-size: 12px;
 }
+@media print {
+  .graph-explorer-toolbar,
+  .graph-explorer-accordion-item--collapsed,
+  .graph-explorer-accordion-item__handle-btn,
+  .graph-explorer-navigator__toggle-icon,
+  .graph-explorer-navigator--collapsed,
+  .graph-explorer-class-tree__filter-group,
+  .graph-explorer-input-group,
+  .link-types-toolbox__heading,
+  .graph-explorer-instances-search__criterion-remove,
+  :is(*) .linkInToolBox__filter-button {
+    display: none;
+  }
+  .graph-explorer-accordion-item--horizontal {
+    border-right: 0;
+  }
+  .graph-explorer-accordion-item--expanded + .graph-explorer-accordion-item--expanded {
+    margin-left: 1em;
+  }
+  :is(*)::-webkit-scrollbar {
+    display: none;
+  }
+}
