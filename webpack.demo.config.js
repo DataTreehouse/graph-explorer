@@ -28,6 +28,7 @@ module.exports = {
   mode: 'production',
   entry: {
     'coypu-internal': path.join(examplesDir, 'coypu-internal.ts'),
+    //'coypu-internal-sameas': path.join(examplesDir, 'coypu-internal-sameas.ts'),
     freebase: path.join(examplesDir, 'freebase.ts'),
     // rdf: path.join(examplesDir, 'rdf.ts'),
     // demo: path.join(examplesDir, 'demo.ts'),
