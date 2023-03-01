@@ -9,7 +9,7 @@ the correct Node version is
 `node --version`
 
 ```
-v16.10.0
+v18.14.2
 ```
 
 ## Installation
