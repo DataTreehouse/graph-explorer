@@ -34,6 +34,7 @@
     "_webpack": "./node_modules/.bin/webpack"
   },
   "dependencies": {
+    "@types/n3": "^1.10.4",
     "@types/react-leaflet": "^1.9.4",
     "@types/resize-observer-browser": "^0.1.7",
     "@types/wellknown": "^0.5.4",
