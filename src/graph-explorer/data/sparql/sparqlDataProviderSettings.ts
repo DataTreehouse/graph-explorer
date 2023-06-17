@@ -524,7 +524,7 @@ export const OWLRDFSSettingsOverride: Partial<SparqlDataProviderSettings> = {
   dataLabelProperty: 'rdfs:label',
   fullTextSearch: {
     prefix: '',
-    queryPattern: ` OPTIONAL {?inst \${dataLabelProperty} ?search1}
+    queryPattern: ` ?inst ?prop [] . OPTIONAL {?inst \${dataLabelProperty} ?search1}
         FILTER regex(COALESCE(str(?search1), str(?extractedLabel)), "\${text}", "i")
         BIND(0 as ?score)
 `,

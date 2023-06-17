@@ -709,13 +709,13 @@ export class SparqlDataProvider implements DataProvider {
     let textSearchPart = '';
     if (params.text) {
       innerProjection += ' ?score';
-      if (this.settings.fullTextSearch.extractLabel) {
-        textSearchPart += sparqlExtractLabel('?inst', '?extractedLabel');
-      }
-      textSearchPart = resolveTemplate(fullTextSearch.queryPattern, {
+      textSearchPart += resolveTemplate(fullTextSearch.queryPattern, {
         text: params.text,
         dataLabelProperty,
       });
+      if (this.settings.fullTextSearch.extractLabel) {
+        textSearchPart += sparqlExtractLabel('?inst', '?extractedLabel');
+      }
     }
 
     const blankNodes = this.options.acceptBlankNodes;
