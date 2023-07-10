@@ -3,6 +3,8 @@
 /*.sh
 /*.bat
 !travis-dist-deploy.sh
+!docker-start.sh
+!docker-build.sh
 .idea/
 .vscode/
 

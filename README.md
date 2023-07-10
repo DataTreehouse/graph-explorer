@@ -1,8 +1,45 @@
-# Ontodia Coypu version
+# Ontodia Graph Explorer
 
-Serves ontodia beneath https://explore.skynet.coypu.org
+Ontodia Graph Explorer can be used to explore any remote Jena Fuseki/SPARQL endpoint.
 
-# Note
+Usage:
+
+```sh
+docker run --rm \
+  -p 8002:80 \
+  -e ENDPOINT_URL=http://localhost:3030/geods \
+  -e LUCENE_SEARCH=no \
+  aksw/ontodia
+```
+
+The instance search field can be directed to Jena's Lucene index if you have it configured on your Fuseki Dataset:
+
+
+```sh
+... \
+  -e LUCENE_SEARCH=yes \
+...
+```
+
+Or with docker compose:
+
+```yml
+services:
+  ontodia:
+    image: aksw/ontodia
+    environment:
+      - ENDPOINT_URL=http://localhost:3030/geods
+      - LUCENE_SEARCH=no
+    ports:
+      - 8002:80
+```
+
+To fill in the Ontology tree on the left, upload the ontology file(s) into the dataset.
+
+
+# Technical details
+
+## Note
 
 the correct Node version is
 
@@ -12,11 +49,11 @@ the correct Node version is
 v18.14.2
 ```
 
-## Installation
+### Installation
 
 `npm install graph-explorer`
 
-# Building the ontodia graph explorer for coypu
+## Building the ontodia graph explorer
 
 ```
 BUNDLE_PEERS=true ./node_modules/.bin/webpack --config webpack.demo.config.js
@@ -28,7 +65,9 @@ the files are output to
 
 folder.
 
-# Graph Explorer
+# Original readme
+
+## Graph Explorer
 [![npm version](https://badge.fury.io/js/graph-explorer.svg)](https://www.npmjs.com/package/graph-explorer)
 ![CI status](https://github.com/zazuko/graph-explorer/workflows/Node.js%20CI/badge.svg)
 
@@ -46,7 +85,7 @@ In short, Graph Explorer helps you, your team, and the world better access and u
 
 Graph Explorer is a fork of [Ontodia](https://github.com/metaphacts/ontodia), which is now part of [Metaphacts](https://metaphacts.com/). In an effort to further develop its open-source version, we decided to fork, maintain and extend the codebase where needed. Contributions from any partners are very welcome!
 
-## Features
+### Features
 
 - Visual navigation and diagramming over large graph data sets
 - Rich graph visualization and context-aware navigation features 
@@ -54,15 +93,15 @@ Graph Explorer is a fork of [Ontodia](https://github.com/metaphacts/ontodia), wh
 - User friendly - no graph query language or prior knowledge of the schema required
 - Customizable user interface (by modifying templates for nodes and links) and data storage back-end
 
-## Examples
+### Examples
 
 `npm run demo` and open <http://localhost:10444/>
 
-## Installation
+### Installation
 
 `npm install graph-explorer`
 
-## Building / Publishing
+### Building / Publishing
 
 ```
 npm run build-all
