@@ -8,8 +8,10 @@ make_instance() {
     local path="$1"
     local endpoint="$2"
     local lucene="$3"
-    local g="$4"
+    local creds="$4"
+    local g="$5"
     local i
+    local fetch_credentials
     local title_prefix
 
     path="${path#/}"
@@ -45,6 +47,19 @@ Redirect to   : $endpoint
 	exit 1
     fi
 
+    if [ "$creds" = yes ]; then
+	fetch_credentials=include
+    elif [ "$creds" = no ]; then
+	fetch_credentials=same-origin
+    else
+	if [ "$g" -eq 0 ]; then
+	    echo "USE_CREDS is set to \`${creds}' but must be yes or no"
+	else
+	    echo "Entry $g (/$path): fourth option (creds) is set to \`${creds}' but must be yes or no"
+	fi
+	exit 1
+    fi
+
     if [ -z "$endpoint" ]; then
 	if [ "$g" -eq 0 ]; then
 	    echo "ENDPOINT_URL not set"
@@ -64,13 +79,28 @@ Redirect to   : $endpoint
 	title_prefix="$path - "
     fi
 
-    env -i ENDPOINT_URL="$endpoint" WEB_PATH="$path" LUCENE_SEARCH="$lucene" TITLE_PREFIX="$title_prefix" \
+    env -i \
+	ENDPOINT_URL="$endpoint" \
+	WEB_PATH="$path" \
+	FETCH_CREDENTIALS="$fetch_credentials" \
+	LUCENE_SEARCH="$lucene" \
+	TITLE_PREFIX="$title_prefix" \
 	perl -p -e 's|@([A-Z_]{3,})@|$ENV{$1}//$&|ge' "$t/$i.bundle.js" > "$d/$path.bundle.js"
 
-    env -i ENDPOINT_URL="$endpoint" WEB_PATH="$path" LUCENE_SEARCH="$lucene" TITLE_PREFIX="$title_prefix" \
+    env -i \
+	ENDPOINT_URL="$endpoint" \
+	WEB_PATH="$path" \
+	FETCH_CREDENTIALS="$fetch_credentials" \
+	LUCENE_SEARCH="$lucene" \
+	TITLE_PREFIX="$title_prefix" \
 	perl -p -e 's|@([A-Z_]{3,})@|$ENV{$1}//$&|ge;s|'"$i"'|'"$path"'|g' "$t/$i.bundle.js.map" > "$d/$path.bundle.js.map"
 
-    env -i ENDPOINT_URL="$endpoint" WEB_PATH="$path" LUCENE_SEARCH="$lucene" TITLE_PREFIX="$title_prefix" \
+    env -i \
+	ENDPOINT_URL="$endpoint" \
+	WEB_PATH="$path" \
+	FETCH_CREDENTIALS="$fetch_credentials" \
+	LUCENE_SEARCH="$lucene" \
+	TITLE_PREFIX="$title_prefix" \
 	perl -p -e 's|"explorer\.bundle\.js\??[^"]*"|"'"$path.bundle.js"'?'"$(openssl dgst -binary "$d/$path.bundle.js" | basenc --base64url --wrap=0)"'"|;s|@([A-Z_]{3,})@|$ENV{$1}//$&|ge;' \
 	"$t/index.html" > "$d/$path.html"
 
@@ -87,6 +117,7 @@ Entry $g:"
     fi
     echo "PATH          = /$path
 ENDPOINT_URL  = $endpoint
+USE_CREDS     = $creds
 LUCENE_SEARCH = $lucene
 "
 }
@@ -94,11 +125,11 @@ LUCENE_SEARCH = $lucene
 has_instance=0
 if [ "${ENDPOINT_MAP+x}" = x ]; then
     g=0
-    while IFS='|' read path endpoint lucene x; do
+    while IFS='|' read path endpoint lucene creds x; do
 	let g=g+1
 	valid=0
-	if [ -n "$path$endpoint$lucene$x" ]; then
-	    make_instance "$path" "$endpoint" "${lucene:-yes}" "$g" "$x" || valid=$?
+	if [ -n "$path$endpoint$lucene$creds$x" ]; then
+	    make_instance "$path" "$endpoint" "${lucene:-yes}" "${creds:-yes}" "$g" "$x" || valid=$?
 	    if [ "$valid" -eq 0 ]; then
 		has_instance=1
 	    fi
@@ -107,7 +138,7 @@ if [ "${ENDPOINT_MAP+x}" = x ]; then
 fi
 
 if [ "${ENDPOINT_URL+x}" = x ]; then
-    make_instance "index" "$ENDPOINT_URL" "${LUCENE_SEARCH-yes}" "0" ""
+    make_instance "index" "$ENDPOINT_URL" "${LUCENE_SEARCH-yes}" "${USE_CREDS-yes}" "0" ""
     has_instance=1
 fi
 

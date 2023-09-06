@@ -70,7 +70,8 @@ function queryInternalCoypu(params: {
   return fetch(params.url, {
     method: params.method,
     body: params.body,
-    credentials: 'include',
+    // @ts-expect-error
+    credentials: '@FETCH_CREDENTIALS@',
     mode: 'cors',
     cache: 'default',
     headers: params.headers,
