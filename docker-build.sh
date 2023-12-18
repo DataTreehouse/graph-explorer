@@ -5,4 +5,4 @@ set -eu
 rm -fr dist/examples
 BUNDLE_PEERS=true ./node_modules/.bin/webpack --config webpack.demo.config.js
 chmod -R g+rwX dist/examples || : ; chmod -R o+rX dist/examples || :
-docker build . -t aksw/ontodia
+docker build . -t data-treehouse/graph-explorer

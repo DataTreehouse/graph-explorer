@@ -365,7 +365,17 @@ export const RDFSettings: SparqlDataProviderSettings = {
     elementFirst: false,
   },
 
-  classTreeQuery: ``,
+  classTreeQuery: `SELECT ?class ?label ?parent WHERE {
+                {
+                    ?class a rdfs:Class
+                } UNION {
+                    ?class a owl:Class
+                }
+                FILTER ISIRI(?class)
+                OPTIONAL {?class rdfs:label ?label}
+                OPTIONAL {?class rdfs:subClassOf ?parent. FILTER ISIRI(?parent)}
+            }
+        `,
 
   classInfoQuery: `SELECT ?class ?label ?instcount WHERE {
     VALUES(?class) {\${ids}}
